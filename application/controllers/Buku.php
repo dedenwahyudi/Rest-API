@@ -13,8 +13,8 @@ class Buku extends RestController
         // Load model dan berikan alias 'buku'
         $this->load->model('m_buku', 'buku');
         // Limit Hit Postman
-        $this->methods['index_get']['limit'] = 2;
-        $this->methods['index_delete']['limit'] = 2;
+        // $this->methods['index_get']['limit'] = 2;
+        // $this->methods['index_delete']['limit'] = 2;
     }
 
     // READ
