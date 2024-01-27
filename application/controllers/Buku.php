@@ -1,6 +1,9 @@
 <?php
 
 use chriskacerguis\RestServer\RestController;
+// Import Use
+use PhpOffice\PhpSpreadsheet\Reader\Xls;
+use PhpOffice\PhpSpreadsheet\Reader\Xlsx;
 
 class Buku extends RestController
 {
@@ -38,69 +41,81 @@ class Buku extends RestController
     // CREATE
     public function index_post()
     {
-        // Cek apakah validasi bernilai false atau true
-        if ($this->_validationCheck() === false) {
-            // Jika false tambahkan pesan atau response
-            $this->response([
-                'status' => false,
-                'message' => strip_tags(validation_errors())
-            ], self::HTTP_BAD_REQUEST);
+        // Baca file
+        $file = $_FILES['file'];
+        // Cek apakah file tersebut ada atau tidak menggunakan isset
+        $filename = $file['name'];
+        // Cek apakan variable $filename ada isinya
+        if ($filename != '') {
+            // Jika ada lakukan proses import excel. Panggil function import_post()
+            $this->import_post();
         } else {
-            // Jika true, jalankan fungsi berikut ini
+            // Jika tidak ada lakukan proses input biasa
 
-            // Ambil inputan dengan name 'cover'
-            $file = $_FILES['cover'];
-            // Buatkan path atau alamat penyimpanan file yang di upload
-            $path = 'uploads/buku/';
-            // Cek apakah folder penyimpanan gambar yang di upload sudah ada atau belum, jika belum buatkan dengan fungsi mk_dir()
-            if (!is_dir($path)) {
-                mkdir($path, 0777, true);
-            }
-            // Inisialisasi path file
-            $path_file = '';
-            // Cek apakah nama file dari file yang di input itu tidak kosong, jika ya jalankan fungsi berikut ini
-            if (!empty($file['name'])) {
-                // Path atau alamat penyimpanan
-                $config['upload_path'] = './' . $path;
-                // Ekstensi file yang didukung
-                $config['allowed_types'] = 'jpeg|jpg|png|gif';
-                // Nama file
-                $config['file_name'] = time();
-                // Maksimal ukuran file
-                $config['max_size'] = 1024;
-                // Gunakan library upload, dan inisialisasikan variable $config kedalam library upload tersebut
-                $this->upload->initialize($config);
-                if ($this->upload->do_upload('cover')) {
-                    // Untuk mendapatkan file yang berhasil di upload.
-                    $uploadData = $this->upload->data();
-                    $path_file = './' . $path . $uploadData['file_name'];
-                }
-            }
-            // Siapkan data yang akan di simpan ke database dari inputan yang di post user
-            $data = [
-                'judul' => $this->post('judul'),
-                'penulis' => $this->post('penulis'),
-                'tahun' => $this->post('tahun'),
-                'penerbit' => $this->post('penerbit'),
-                'cover' => $path_file,
-                'stock' => $this->post('stock'),
-                'harga_beli' => $this->post('harga_beli'),
-                'harga_jual' => $this->post('harga_jual'),
-                'kategori' => $this->post('id_kategori')
-            ];
-            // Jalankan fungsi simpan dan simpan kedalam variable untuk mengecek nilai affected rows
-            $saved = $this->buku->insertData($data);
-            // Cek apakan affected rows bernilai > 0
-            if ($saved > 0) {
-                $this->response([
-                    'status' => true,
-                    'message' => 'Berhasil menambahkan data.'
-                ], self::HTTP_CREATED);
-            } else {
+            // Cek apakah validasi bernilai false atau true
+            if ($this->_validationCheck() === false) {
+                // Jika false tambahkan pesan atau response
                 $this->response([
                     'status' => false,
-                    'message' => 'Gagal menambahkan data.'
+                    'message' => strip_tags(validation_errors())
                 ], self::HTTP_BAD_REQUEST);
+            } else {
+                // Jika true, jalankan fungsi berikut ini
+
+                // Ambil inputan dengan name 'cover'
+                $file = $_FILES['cover'];
+                // Buatkan path atau alamat penyimpanan file yang di upload
+                $path = 'uploads/buku/';
+                // Cek apakah folder penyimpanan gambar yang di upload sudah ada atau belum, jika belum buatkan dengan fungsi mk_dir()
+                if (!is_dir($path)) {
+                    mkdir($path, 0777, true);
+                }
+                // Inisialisasi path file
+                $path_file = '';
+                // Cek apakah nama file dari file yang di input itu tidak kosong, jika ya jalankan fungsi berikut ini
+                if (!empty($file['name'])) {
+                    // Path atau alamat penyimpanan
+                    $config['upload_path'] = './' . $path;
+                    // Ekstensi file yang didukung
+                    $config['allowed_types'] = 'jpeg|jpg|png|gif';
+                    // Nama file
+                    $config['file_name'] = time();
+                    // Maksimal ukuran file
+                    $config['max_size'] = 1024;
+                    // Gunakan library upload, dan inisialisasikan variable $config kedalam library upload tersebut
+                    $this->upload->initialize($config);
+                    if ($this->upload->do_upload('cover')) {
+                        // Untuk mendapatkan file yang berhasil di upload.
+                        $uploadData = $this->upload->data();
+                        $path_file = './' . $path . $uploadData['file_name'];
+                    }
+                }
+                // Siapkan data yang akan di simpan ke database dari inputan yang di post user
+                $data = [
+                    'judul' => $this->post('judul'),
+                    'penulis' => $this->post('penulis'),
+                    'tahun' => $this->post('tahun'),
+                    'penerbit' => $this->post('penerbit'),
+                    'cover' => $path_file,
+                    'stock' => $this->post('stock'),
+                    'harga_beli' => $this->post('harga_beli'),
+                    'harga_jual' => $this->post('harga_jual'),
+                    'kategori' => $this->post('id_kategori')
+                ];
+                // Jalankan fungsi simpan dan simpan kedalam variable untuk mengecek nilai affected rows
+                $saved = $this->buku->insertData($data);
+                // Cek apakan affected rows bernilai > 0
+                if ($saved > 0) {
+                    $this->response([
+                        'status' => true,
+                        'message' => 'Berhasil menambahkan data.'
+                    ], self::HTTP_CREATED);
+                } else {
+                    $this->response([
+                        'status' => false,
+                        'message' => 'Gagal menambahkan data.'
+                    ], self::HTTP_BAD_REQUEST);
+                }
             }
         }
     }
@@ -269,6 +284,74 @@ class Buku extends RestController
                     'message' => 'Gagal menghapus data.'
                 ], self::HTTP_BAD_REQUEST);
             }
+        }
+    }
+
+    public function import_post()
+    {
+        // Baca file
+        $file = $_FILES['file'];
+        // Cek apakah file tersebut ada atau tidak menggunakan isset
+        $filename = $file['name'];
+        if (isset($filename)) {
+            // Jika ada jalankan fungsi Import
+
+            // Tampung nama extension yang di upload
+            $extension = pathinfo($filename, PATHINFO_EXTENSION);
+            if ($extension == 'xls') {
+                $reader = new Xls();
+            } else {
+                $reader = new Xlsx();
+            }
+
+            $path = $file['tmp_name'];
+            $spreadsheet = $reader->load($path);
+            $sheet = $spreadsheet->getActiveSheet()->toArray();
+            $data = [];
+            foreach ($sheet as $key => $value) {
+                if ($key == 0) continue;
+                $judul = $value[1];
+                $penulis = $value[2];
+                $tahun_terbit = $value[3];
+                $penerbit = $value[4];
+                $stock = $value[5];
+                $harga_beli = $value[6];
+                $harga_jual = $value[7];
+                $kategori = $value[8];
+
+                // Lakukan pengecekan apakah semua kolom yang di kirim wajib di isi atau tidak
+                if ($judul != '' && $penulis != '' && $tahun_terbit != '' && $penerbit != '' && $stock != '' && $harga_jual != '' && $harga_beli != '' && $kategori != '') {
+                    $data[] = [
+                        'judul' => $judul,
+                        'penulis' => $penulis,
+                        'tahun' => $tahun_terbit,
+                        'penerbit' => $penerbit,
+                        'stock' => $stock,
+                        'harga_beli' => $harga_beli,
+                        'harga_jual' => $harga_jual,
+                        'kategori' => $kategori
+                    ];
+                }
+            }
+            // Lakukan fungsi import data
+            $import = $this->buku->importData($data);
+            if ($import > 0) {
+                $this->response([
+                    'status' => true,
+                    'message' => 'Berhasil mengimport data.'
+                ], self::HTTP_OK);
+            } else {
+                $this->response([
+                    'status' => false,
+                    'message' => 'Tidak ada tada yang di import.'
+                ], self::HTTP_BAD_REQUEST);
+            }
+        } else {
+            // Jika tidak ada berikan pesan atau response
+            $this->response([
+                'status' => false,
+                'message' => 'File tidak ditemukan.'
+            ], self::HTTP_NOT_FOUND);
         }
     }
 
