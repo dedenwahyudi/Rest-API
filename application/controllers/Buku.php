@@ -1,15 +1,21 @@
 <?php
 
-use chriskacerguis\RestServer\RestController;
+// use chriskacerguis\RestServer\RestController; (Sebelumnya)
+
+// Hubungkan dengan controller Auth.php
+require_once APPPATH . 'controllers/Auth.php';
+
 // Import Use
 use PhpOffice\PhpSpreadsheet\Reader\Xls;
 use PhpOffice\PhpSpreadsheet\Reader\Xlsx;
 
-class Buku extends RestController
+// class Buku extends RestController (Sebelumnya)
+class Buku extends Auth
 {
     function __construct()
     {
         parent::__construct();
+        $this->cektoken();
         // Load model dan berikan alias 'buku'
         $this->load->model('m_buku', 'buku');
         // Limit Hit Postman
